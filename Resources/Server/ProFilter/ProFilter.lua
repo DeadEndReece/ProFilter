@@ -1,5 +1,6 @@
 -- ============================================================
---  ProFilter V4.3 - Welcome Warning Update
+--  ProFilter V1 - Made by DeadEndReece (UkDrifter)
+--  A powerful and customizable profanity filter for your server.
 --  Features: Welcome Warning, Config Messages, Setup Wizard
 -- ============================================================
 

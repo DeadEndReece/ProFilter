@@ -1,7 +1,7 @@
 -- ============================================================
---  ProFilter V1 - A Robust Profanity Filter for your MPS server with real-time chat monitoring, customizable wordlists, and admin controls.
+--  ProFilter V1 - A Robust Profanity Filter for your BeamMP server with real-time chat monitoring, customizable wordlists, and admin controls.
 --  Features: Censor or Replace Mode, Action Logging, In-Game Commands, Persistent Data Storage, and a First-Launch Setup Wizard.
---  Made by DeadEndReece (UkDrifter)
+--  Made by DeadEndReece (UkDrifter) | GitHub: https://github.com/DeadEndReece 
 -- ============================================================
 
 local baseDir = "Resources/Server/ProFilter/"
@@ -9,7 +9,7 @@ local dataPath = baseDir .. "data.txt"
 local logPath = baseDir .. "logs.txt"
 
 -- ============================================================
--- ⚙️ QUICK CONFIGURATION
+-- ⚙️ MESSAGE CONFIGURATION
 -- Change the messages sent to players here:
 -- ============================================================
 local CONFIG = {
@@ -107,14 +107,13 @@ local function ProcessPFCommand(args, sender_id)
             MP.SendChatMessage(sender_id, "pf.addword (pf.aw) <word>     - Add words (comma separated)")
             MP.SendChatMessage(sender_id, "pf.removeword (pf.rw) <word>  - Rem words (comma separated)")
             MP.SendChatMessage(sender_id, "pf.listwords (pf.wl)          - List all forbidden words")
-            MP.SendChatMessage(sender_id, "pf.clearwords (pf.cw)         - Clear the entire wordlist")
             MP.SendChatMessage(sender_id, "-----------------------------------------------------------")
         else
             print("-------------------- ProFilter Commands --------------------")
-            print("pf.status (pf.st)                - View Live Stats & Config")
-            print("pf.addword (pf.aw) <w1,w2>       - Add words (comma separated)")
-            print("pf.removeword (pf.rw) <w1,w2>    - Rem words (comma separated)")
-            print("pf.listwords (pf.wl)             - List all forbidden words")
+            print("pf.status (pf.st)                - View Live Stats & Config (Ingame & Console)") 
+            print("pf.addword (pf.aw) <w1,w2>       - Add words (comma separated) (Ingame & Console)") 
+            print("pf.removeword (pf.rw) <w1,w2>    - Rem words (comma separated) (Ingame & Console)") 
+            print("pf.listwords (pf.wl)             - List all forbidden words (Ingame & Console)") 
             print("pf.clearwords (pf.cw)            - Clear the entire wordlist (Console Only)")
             print("pf.censor (pf.ce) <on/off>       - Toggle Censor Mode (Console Only)")
             print("pf.replace (pf.re) <on/off>      - Toggle Replace Mode (Console Only)")
@@ -205,7 +204,6 @@ local function ProcessPFCommand(args, sender_id)
         else print("--- Blocked Words (" .. #PF_DATA.words .. ") ---"); for i, v in ipairs(PF_DATA.words) do print(i .. ". " .. v) end end
         return true
 
-
     -- CONSOLE ONLY COMMANDS
     elseif (cmd == "pf.clearwords" or cmd == "pf.cw") and not sender_id then
         PF_DATA.words = {}; SavePFData(); print("[ProFilter] Wordlist completely cleared."); return true
@@ -240,7 +238,6 @@ local function ProcessPFCommand(args, sender_id)
         for name, _ in pairs(PF_DATA.admins) do print("- " .. name) end
         return true
 
-    -- FACTORY RESET COMMAND
     elseif cmd == "pf.reset" and not sender_id then
         print("\n=========================================================")
         print("   [ProFilter] FACTORY RESET INITIATED")
@@ -266,8 +263,8 @@ function ProFilter_InitTimer()
     end
 end
 
+-- Console Input Handler for Commands and Setup Wizard
 function OnPFConsoleInput(cmd)
-    -- SETUP WIZARD & CONFIRMATION INTERCEPTOR
     if setupStep ~= 0 then
         local rawInput = cmd:match("^%s*(.-)%s*$")
         local ans = rawInput:lower()
@@ -301,16 +298,16 @@ function OnPFConsoleInput(cmd)
             if char == "" then char = "*" end
             PF_DATA.censorChar = char
             print(" -> Censor Symbol set to: '" .. char .. "'")
-            print("\n > Step 3: Enable Action Logging?")
-            print("   (Saves blocked messages, IDs, and timestamps to logs.txt)")
+            print("\n > Step 3: Enable Replace Mode?")
+            print("   (Swaps the forbidden word with a custom text/word entirely)")
             print(" > Type 'y' for Yes or 'n' for No:")
             setupStep = 3
 
         elseif setupStep == 3 then
-            PF_DATA.logMode = isYes
-            print(" -> Logging Mode set to: " .. (isYes and "ON" or "OFF"))
+            PF_DATA.replaceMode = isYes
+            print(" -> Replace Mode set to: " .. (isYes and "ON" or "OFF"))
             print("\n > Step 4: Set your Replacement Word")
-            print("   (Used if you enable Replace Mode later. e.g. [REDACTED], Meow)")
+            print("   (Used if you enabled Replace Mode. e.g. [REDACTED], Meow)")
             print(" > Type a word:")
             setupStep = 4
 
@@ -318,12 +315,20 @@ function OnPFConsoleInput(cmd)
             if rawInput == "" then rawInput = "Meow" end
             PF_DATA.replaceWord = rawInput
             print(" -> Replacement Word set to: '" .. rawInput .. "'")
-            print("\n > Step 5: Load the default offensive wordlist?")
-            print("   (Automatically adds ~30 common swear words to get you started)")
+            print("\n > Step 5: Enable Action Logging?")
+            print("   (Saves blocked messages, IDs, and timestamps to logs.txt)")
             print(" > Type 'y' for Yes or 'n' for No:")
             setupStep = 5
 
         elseif setupStep == 5 then
+            PF_DATA.logMode = isYes
+            print(" -> Logging Mode set to: " .. (isYes and "ON" or "OFF"))
+            print("\n > Step 6: Load the default offensive wordlist?")
+            print("   (Automatically adds ~30 common swear words to get you started)")
+            print(" > Type 'y' for Yes or 'n' for No:")
+            setupStep = 6
+
+        elseif setupStep == 6 then
             if isYes then
                 PF_DATA.words = {
                     "fuck", "shit", "bitch", "ass", "dick", "cunt", "pussy", 
@@ -337,6 +342,19 @@ function OnPFConsoleInput(cmd)
                 PF_DATA.words = {}
                 print(" -> Starting with an empty wordlist.")
             end
+            print("\n > Step 7: Add an In-Game Admin?")
+            print("   (Allows a player to use ProFilter commands in the server chat)")
+            print(" > Type their EXACT in-game name, or type 'n' to skip:")
+            setupStep = 7
+            
+        elseif setupStep == 7 then
+            if ans ~= "n" and ans ~= "no" and ans ~= "skip" and rawInput ~= "" then
+                PF_DATA.admins[rawInput] = true
+                print(" -> Admin added: '" .. rawInput .. "'")
+            else
+                print(" -> Skipped. You can add admins later using 'pf.adduser <name>'")
+            end
+            
             SavePFData()
             setupStep = 0
             print("\n=========================================================")
@@ -346,7 +364,6 @@ function OnPFConsoleInput(cmd)
         return "" 
     end
 
-    -- Normal Console Processing
     local args = {}
     for word in cmd:gmatch("%S+") do table.insert(args, word) end
     if #args > 0 then ProcessPFCommand(args, nil) return "" end
@@ -417,7 +434,6 @@ function OnPFPlayerJoin(player_id)
     end
 end
 
--- Delayed Initialization
 MP.RegisterEvent("ProFilter_InitTimer", "ProFilter_InitTimer")
 MP.CreateEventTimer("ProFilter_InitTimer", 1000)
 

@@ -1,4 +1,5 @@
-# ProFilter - Advanced Chat Filter for BeamMP - Made by DeadEndReece (UkDrifter) & AI "People judge, but hey, if it does what you want thats all that matters right? - Reece 2026"
+# ProFilter - Advanced Chat Filter for BeamMP
+Made by DeadEndReece (UkDrifter) & AI "People judge, but hey, if it does what you want thats all that matters right? - Reece 2026"
 
 ProFilter is a highly customizable, server-side profanity filter for BeamMP. It intercepts chat messages before they are broadcasted to the server, actively preventing toxicity while giving server owners complete control over how rule-breakers are handled.
 

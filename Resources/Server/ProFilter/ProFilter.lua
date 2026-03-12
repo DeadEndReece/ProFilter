@@ -1,7 +1,7 @@
 -- ============================================================
---  ProFilter V1 - Made by DeadEndReece (UkDrifter)
---  A powerful and customizable profanity filter for your server.
---  Features: Welcome Warning, Config Messages, Setup Wizard
+--  ProFilter V1 - A Robust Profanity Filter for your MPS server with real-time chat monitoring, customizable wordlists, and admin controls.
+--  Features: Censor or Replace Mode, Action Logging, In-Game Commands, Persistent Data Storage, and a First-Launch Setup Wizard.
+--  Made by DeadEndReece (UkDrifter)
 -- ============================================================
 
 local baseDir = "Resources/Server/ProFilter/"

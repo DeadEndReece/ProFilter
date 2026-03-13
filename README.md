@@ -5,12 +5,19 @@ ProFilter is a highly customizable, server-side profanity filter for BeamMP. It 
 
 ## ✨ Features
 First Launch Setup Wizard - Get your filter up and running in minutes with an interactive console setup. (With options to load a default wordlist, enable censoring, logging, and more right from the start!)
+
 Customizable Messages - Tailor the messages sent to players when they trigger the filter or join the server.
+
 Adaptive Detection - Catches common obfuscation techniques like leetspeak (e.g., "4" for "a", "0" for "o") and ignores harmless punctuation to ensure bad words are still caught.
+
 Censor Mode - Replace bad words with a character of your choice instead of blocking the whole message.
+
 Replace Mode - Swap out bad words for a custom replacement (e.g., [REDACTED], Meow).
+
 Action Logging - Optionally save intercepted messages, player IDs, and timestamps to a log file for moderation review.
+
 Dynamic Word Management - Add or remove forbidden words on the fly via console or in-game commands.
+
 Admin Management - Authorize specific players to use ProFilter commands in-game.
 
 

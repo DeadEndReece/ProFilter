@@ -1,5 +1,5 @@
 -- ============================================================
---  ProFilter V2 - The User-Friendly Update + Advanced Censorship Engine
+--  ProFilter V1 - The Ultimate In-Game Profanity Filter for BeamMP Servers
 --  Features: Welcome Messages | Configurable Censor/Replace Modes | Advanced Leet-Speak Detection | Interactive Console Menu | Persistent Data Storage | Action Logging & More!
 --  Made by DeadEndReece (UkDrifter) | GitHub: https://github.com/DeadEndReece 
 -- ============================================================
@@ -255,8 +255,27 @@ local function ProcessPFCommand(args, sender_id)
         end
         return true
 
-    elseif (cmd == "pf.clearwords" or cmd == "pf.cw") and not sender_id then
-        PF_DATA.words = {}; PF_DATA.strictWords = {}; SavePFData(); print("[ProFilter] All wordlists completely cleared."); return true
+    elseif cmd == "pf.clearwords" or cmd == "pf.cw" then
+        if not sender_id then -- Ensure it's executed from the server console
+            if args[2] and args[2]:lower() == "confirm" then
+                PF_DATA.words = {}
+                PF_DATA.strictWords = {}
+                SavePFData()
+                print("[ProFilter] All wordlists completely cleared.")
+            else
+                print("\n=========================================================")
+                print("   [ProFilter] WARNING!")
+                print("=========================================================")
+                print(" > This will completely delete ALL of your Heavy and Short")
+                print(" > swear words. This action CANNOT be undone.")
+                print(" >")
+                print(" > To confirm, type: " .. cmd .. " confirm")
+                print("=========================================================\n")
+            end
+        else
+            Reply(sender_id, "The clearwords command can only be used from the server console.")
+        end
+        return true
     end
 end
 

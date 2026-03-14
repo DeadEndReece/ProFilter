@@ -1,5 +1,6 @@
+
 # ProFilter - Advanced Chat Filter for BeamMP
-Made by DeadEndReece (UkDrifter) & AI "People judge, but hey, if it does what you want thats all that matters right? - Reece 2026"
+Made by DeadEndReece (UkDrifter) & help of AI "People judge, but hey, if it does what you want thats all that matters right? - Reece 2026"
 
 ProFilter is a highly customizable, server-side profanity filter for BeamMP. It intercepts chat messages before they are broadcasted to the server, actively preventing toxicity while giving server owners complete control over how rule-breakers are handled.
 
@@ -30,23 +31,15 @@ Admin Management - Authorize specific players to use ProFilter commands in-game.
 ## 🛠️ Commands
 Commands can be used in the server console (e.g., `pf.aw word`) or in-game by admins using a forward slash (e.g., `/pf.aw word`).
 
-| Command | Short | Description | Access |
-| :--- | :--- | :--- | :--- |
-| `pf.help` | `pf.h` | Shows the help menu | Admin / Console |
-| `pf.status` | `pf.st` | View intercepted stats & current config | Admin / Console |
-| `pf.addword <word>` | `pf.aw` | Add a word to the filter (comma separate for multiple) | Admin / Console |
-| `pf.removeword <word>`| `pf.rw` | Remove a word from the filter | Admin / Console |
-| `pf.listwords` | `pf.wl` | List all forbidden words | Admin / Console |
-| `pf.clearwords` | `pf.cw` | Clear the entire wordlist | Admin / Console |
-| `pf.adduser <name>` | `pf.au` | Give a player in-game admin access | **Console Only** |
-| `pf.removeuser <name>`| `pf.ru` | Remove admin access | **Console Only** |
-| `pf.users` | `pf.lu` | List all authorized admins | **Console Only** |
-| `pf.censor <on/off>` | `pf.ce` | Toggle Censor Mode | **Console Only** |
-| `pf.replace <on/off>` | `pf.re` | Toggle Replace Mode | **Console Only** |
-| `pf.logging <on/off>` | `pf.lo` | Toggle saving logs to `logs.txt` | **Console Only** |
-| `pf.setchar <char>` | `pf.sc` | Set the Censor character (e.g. `*`) | **Console Only** |
-| `pf.setword <word>` | `pf.sw` | Set the Replacement word (e.g. `Meow`) | **Console Only** |
-| `pf.reset` | | Factory reset settings and trigger Setup Wizard | **Console Only** |
+- pf.help (pf.h): View all ProFilter commands and usage instructions. (In-game and Console)
+- pf.menu: Open the interactive settings menu in the console. (Console only)
+- pf.status (pf.st): View current filter configuration and stats. (In-game and Console)
+- pf.list (pf.l): List all words currently in the filter. (In-game and Console)
+- pf.addstrict (pf.as) <w1,w2>: Add heavy swear(s) (In-game and Console)
+- pf.remstrict (pf.rs) <w1,w2>: Remove heavy swear(s) (In-game and Console)
+- pf.addword (pf.aw) <w1,w2>: Add short swear(s) (In-game and Console)
+- pf.removeword (pf.rw) <w1,w2>: Remove short swear(s) (In-game and Console)
+- pf.clearwords (pf.cw): Clear all words from the filter (use with caution!)
 
 ## 🛡️ Admin Setup
 To use in-game commands, you must first authorize yourself via the server console:

@@ -1,6 +1,6 @@
 -- ============================================================
---  ProFilter V2 | Advanced Profanity Filter for MP Servers
---  Features: Dual wordlists (strict vs short), leetspeak normalization, censor/replace modes, in-game admin commands, action logging, and an interactive console menu for easy configuration.
+--  ProFilter V2 - The User-Friendly Update + Advanced Censorship Engine
+--  Features: Welcome Messages | Configurable Censor/Replace Modes | Advanced Leet-Speak Detection | Interactive Console Menu | Persistent Data Storage | Action Logging & More!
 --  Made by DeadEndReece (UkDrifter) | GitHub: https://github.com/DeadEndReece 
 -- ============================================================
 
@@ -356,8 +356,8 @@ function OnPFConsoleInput(cmd)
             print("")
             print("=========================================================")
             if isYes then
-                PF_DATA.strictWords = { "fuck", "shit", "bitch", "cunt", "pussy", "whore", "slut", "faggot", "nigger", "nigga", "bastard", "twat", "wanker", "prick", "retard", "pedo", "pedophile", "nazi", "kys" }
-                PF_DATA.words = { "ass", "dick", "fag", "nig", "rape", "cock", "cum", "tranny", "dyke", "chink", "spic", "gook", "kike" }
+                PF_DATA.strictWords = { "fuck", "bitch", "cunt", "pussy", "fvck", "fukk", "fuk", "biatch", "btch", "cvnt", "pssy", "slvt", "nibba", "niqqa", "negga", "nugga" }
+                PF_DATA.words = { "shit", "ass", "dick", "fag", "nig", "rape", "cum", "cock", "kys", "nigger", "nigga", "fagg", "fagot", "fack", "shet", "bish", "phag", "pusi", "ritard", "azz", "arse", "hoe", "cumm", "cawck", "dik", "dicc", "dikk", "segs", "secks", "pron", "chink", "spic", "gook", "kike", "tranny", "dyke", "twat", "pedo", "nazi", "cnut", "bastard", "slut", "whore", "wanker" }
                 print(" -> Default wordlists loaded.")
             else
                 PF_DATA.words = {}; PF_DATA.strictWords = {}
@@ -411,14 +411,17 @@ function OnPFConsoleInput(cmd)
             else print("Invalid choice. Type a number 0-7.") end
             return ""
 
+        -- Set Censor Char
         elseif menuStep == 2 then
             if rawInput ~= "" then PF_DATA.censorChar = string.sub(rawInput, 1, 1) end
             PrintMenu(); return ""
 
+        -- Set Replacement Word
         elseif menuStep == 3 then
             if rawInput ~= "" then PF_DATA.replaceWord = rawInput end
             PrintMenu(); return ""
 
+        -- Admin Sub-Menu
         elseif menuStep == 4 then
             if ans == "1" then 
                 print("")
@@ -435,6 +438,7 @@ function OnPFConsoleInput(cmd)
             end
             return ""
 
+        -- Add Admin Logic
         elseif menuStep == 5 then
             if ans == "cancel" or rawInput == "" then
                 PrintAdminMenu()
@@ -446,6 +450,7 @@ function OnPFConsoleInput(cmd)
             end
             return ""
 
+        -- Remove Admin Logic
         elseif menuStep == 6 then
             if ans == "cancel" or rawInput == "" then
                 PrintAdminMenu()
@@ -462,7 +467,7 @@ function OnPFConsoleInput(cmd)
             return ""
         end
     end
-    
+
     -- Normal command processing
     local args = {}
     for word in cmd:gmatch("%S+") do table.insert(args, word) end
@@ -539,11 +544,13 @@ function OnPFChatMessage(sender_id, sender_name, message)
         end
     end
 
+    -- Sort matches so we replace them from the back of the string to the front
     table.sort(rawMatches, function(a, b) 
         if a.s == b.s then return a.e > b.e end 
         return a.s > b.s 
     end)
 
+    -- Clean up overlaps
     local matches = {}
     local lastS = math.huge
     for _, m in ipairs(rawMatches) do
@@ -553,6 +560,7 @@ function OnPFChatMessage(sender_id, sender_name, message)
         end
     end
 
+    -- Apply the censorship
     for _, m in ipairs(matches) do
         foundBad = true
         local rep = PF_DATA.replaceMode and PF_DATA.replaceWord or string.rep(PF_DATA.censorChar, m.e - m.s + 1)

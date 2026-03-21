@@ -1,7 +1,8 @@
 -- ============================================================
---  ProFilter V1 - The Ultimate In-Game Profanity Filter for BeamMP Servers
+--  ProFilter V1.1 - The Ultimate In-Game Profanity Filter for BeamMP Servers
 --  Features: Welcome Messages | Configurable Censor/Replace Modes | Advanced Leet-Speak Detection | Interactive Console Menu | Persistent Data Storage | Action Logging & More!
 --  Made by DeadEndReece (UkDrifter) | GitHub: https://github.com/DeadEndReece 
+--  Updated to use BeamMP IDs for admin authentication.
 -- ============================================================
 
 local baseDir = "Resources/Server/ProFilter/"
@@ -22,7 +23,7 @@ local CONFIG = {
 local PF_DATA = {
     words = {},         -- Matches only if standing alone (e.g. 'ass')
     strictWords = {},   -- Matches ANYWHERE in the text (e.g. 'fuck' inside 'fuckyou')
-    admins = {},
+    admins = {},        -- Now stores [BeamMP_ID] = "Username"
     censorMode = false,
     replaceMode = false,
     logMode = false,
@@ -49,7 +50,7 @@ function LoadPFData()
         local currentSection = ""
         for line in file:lines() do
             if line:match("%[.+%]") then currentSection = line:match("%[(.+)%]")
-            elseif line:match("=") then
+            elseif line:match("=") and currentSection == "SETTINGS" then
                 local key, val = line:match("([^=]+)=(.+)")
                 if key == "censor" then PF_DATA.censorMode = (val == "on")
                 elseif key == "replace" then PF_DATA.replaceMode = (val == "on")
@@ -58,7 +59,14 @@ function LoadPFData()
                 elseif key == "rword" then PF_DATA.replaceWord = val
                 end
             elseif line ~= "" then
-                if currentSection == "ADMINS" then PF_DATA.admins[line] = true
+                if currentSection == "ADMINS" then 
+                    -- Support the new ID=Name format
+                    if line:match("=") then
+                        local id, name = line:match("([^=]+)=(.+)")
+                        PF_DATA.admins[id] = name
+                    else
+                        PF_DATA.admins[line] = "Unknown"
+                    end
                 elseif currentSection == "WORDS" then table.insert(PF_DATA.words, line)
                 elseif currentSection == "STRICT" then table.insert(PF_DATA.strictWords, line)
                 end
@@ -82,7 +90,11 @@ function SavePFData()
     if file then
         file:write("[SETTINGS]\ncensor=" .. (PF_DATA.censorMode and "on" or "off") .. "\nreplace=" .. (PF_DATA.replaceMode and "on" or "off") .. "\nlog=" .. (PF_DATA.logMode and "on" or "off") .. "\nchar=" .. PF_DATA.censorChar .. "\nrword=" .. PF_DATA.replaceWord .. "\n\n")
         file:write("[ADMINS]\n")
-        for admin, _ in pairs(PF_DATA.admins) do file:write(admin .. "\n") end
+        -- Save as ID=Name
+        for id, name in pairs(PF_DATA.admins) do 
+            if type(name) == "boolean" then name = "Unknown" end
+            file:write(id .. "=" .. name .. "\n") 
+        end
         file:write("\n[WORDS]\n")
         for _, word in ipairs(PF_DATA.words) do file:write(word .. "\n") end
         file:write("\n[STRICT]\n")
@@ -113,8 +125,8 @@ local function PrintAdminMenu()
     print("\n=========================================================")
     print("   --- Current Admins ---")
     local count = 0
-    for k,_ in pairs(PF_DATA.admins) do 
-        print("   - " .. k)
+    for k, v in pairs(PF_DATA.admins) do 
+        print("   - ID: " .. k .. " | Name: " .. tostring(v))
         count = count + 1 
     end
     if count == 0 then print("   (None)") end
@@ -384,14 +396,21 @@ function OnPFConsoleInput(cmd)
             end
             print("---------------------------------------------------------")
             print(" > Step 7: Add an In-Game Admin?")
-            print(" > Type the exact username, or 'n' to skip:")
+            print(" > Type their BeamMP ID AND Username separated by a space (e.g. 1234567 UkDrifter)")
+            print(" > Or type 'n' to skip:")
             setupStep = 7
         elseif setupStep == 7 then
             print("")
             print("=========================================================")
             if ans ~= "n" and ans ~= "no" and ans ~= "skip" and rawInput ~= "" then
-                PF_DATA.admins[rawInput] = true
-                print(" -> Admin added: '" .. rawInput .. "'")
+                local id, name = rawInput:match("^(%S+)%s*(.*)$")
+                if id then
+                    if name == "" then name = "Unknown" end
+                    PF_DATA.admins[id] = name
+                    print(" -> Admin added: ID '" .. id .. "' | Name: '" .. name .. "'")
+                else
+                    print(" -> Invalid input format. Skipped adding Admin.")
+                end
             else
                 print(" -> Skipped adding Admin.")
             end
@@ -444,11 +463,12 @@ function OnPFConsoleInput(cmd)
         elseif menuStep == 4 then
             if ans == "1" then 
                 print("")
-                print(" > Type the exact name of the player to ADD as Admin (or type 'cancel' to go back):")
+                print(" > Type the BeamMP ID AND Username to ADD separated by a space (e.g. 1234567 UkDrifter):")
+                print(" > (Or type 'cancel' to go back)")
                 menuStep = 5
             elseif ans == "2" then 
                 print("")
-                print(" > Type the exact name of the Admin to REMOVE (or type 'cancel' to go back):")
+                print(" > Type ONLY the BeamMP ID of the Admin to REMOVE (or type 'cancel' to go back):")
                 menuStep = 6
             elseif ans == "0" or ans == "back" then 
                 PrintMenu()
@@ -462,9 +482,15 @@ function OnPFConsoleInput(cmd)
             if ans == "cancel" or rawInput == "" then
                 PrintAdminMenu()
             else
-                PF_DATA.admins[rawInput] = true
-                print(" -> Admin added: '" .. rawInput .. "'")
-                SavePFData()
+                local id, name = rawInput:match("^(%S+)%s*(.*)$")
+                if id then
+                    if name == "" then name = "Unknown" end
+                    PF_DATA.admins[id] = name
+                    print(" -> Admin added: ID '" .. id .. "' | Name: '" .. name .. "'")
+                    SavePFData()
+                else
+                    print(" -> Invalid format. Please use 'ID Name'.")
+                end
                 PrintAdminMenu()
             end
             return ""
@@ -475,11 +501,12 @@ function OnPFConsoleInput(cmd)
                 PrintAdminMenu()
             else
                 if PF_DATA.admins[rawInput] then
+                    local removedName = PF_DATA.admins[rawInput]
                     PF_DATA.admins[rawInput] = nil
-                    print(" -> Admin removed: '" .. rawInput .. "'")
+                    print(" -> Admin removed: ID '" .. rawInput .. "' | Name: '" .. tostring(removedName) .. "'")
                     SavePFData()
                 else
-                    print(" -> Error: Could not find an admin named '" .. rawInput .. "'")
+                    print(" -> Error: Could not find an admin with ID '" .. rawInput .. "'")
                 end
                 PrintAdminMenu()
             end
@@ -494,13 +521,25 @@ function OnPFConsoleInput(cmd)
 end
 
 function OnPFChatMessage(sender_id, sender_name, message)
+    local identifiers = MP.GetPlayerIdentifiers(sender_id)
+    local beammp_id = identifiers and tostring(identifiers.beammp) or nil
+
+    -- NEW: Auto-Update Admin Usernames!
+    if beammp_id and PF_DATA.admins[beammp_id] then
+        if PF_DATA.admins[beammp_id] ~= sender_name then
+            PF_DATA.admins[beammp_id] = sender_name
+            SavePFData()
+        end
+    end
+
     if message:sub(1, 1) == "/" then
         local cmdStr = message:sub(2)
         local args = {}
         for word in cmdStr:gmatch("%S+") do table.insert(args, word) end
         
         if #args > 0 and args[1]:lower():match("^pf%.") then
-            if PF_DATA.admins[sender_name] then
+            -- Verify against the BeamMP ID table
+            if beammp_id and PF_DATA.admins[beammp_id] then
                 ProcessPFCommand(args, sender_id)
             else
                 MP.SendChatMessage(sender_id, CONFIG.NoPermissionMsg)

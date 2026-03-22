@@ -1,8 +1,10 @@
-
-# ProFilter - Advanced Chat Filter for BeamMP
+# ProFilter V1.1 - Advanced Chat Filter for BeamMP
 Made by DeadEndReece (UkDrifter) & help of AI "People judge, but hey, if it does what you want thats all that matters right? - Reece 2026"
 
 ProFilter is a highly customizable, server-side profanity filter for BeamMP. It intercepts chat messages before they are broadcasted to the server, actively preventing toxicity while giving server owners complete control over how rule-breakers are handled.
+
+-V1.1- Updated to include /pf.lookup for live ID fetching and profile verification.
+-V1.1- Now uses BeamMP ID for admin authentication instead of username for improved security and reliability.
 
 ## ✨ Features
 First Launch Setup Wizard - Get your filter up and running in minutes with an interactive console setup. (With options to load a default wordlist, enable censoring, logging, and more right from the start!)
@@ -19,7 +21,7 @@ Action Logging - Optionally save intercepted messages, player IDs, and timestamp
 
 Dynamic Word Management - Add or remove forbidden words on the fly via console or in-game commands.
 
-Admin Management - Authorize specific players to use ProFilter commands in-game.
+Admin Management - Authorize specific players to use ProFilter commands in-game. (Now uses BeamMP IDs for more reliable admin control!)
 
 
 ## 📥 Installation
@@ -33,6 +35,7 @@ Commands can be used in the server console (e.g., `pf.aw word`) or in-game by ad
 
 - pf.help (pf.h): View all ProFilter commands and usage instructions. (In-game and Console)
 - pf.menu: Open the interactive settings menu in the console. (Console only)
+- pf.lookup (pf.lu) <name>: Get a player's BeamMP ID and forum profile link. (Console only) (Will list the players ID and profile link if they are online, otherwise it will provide the profile link based on the username you provide.)
 - pf.status (pf.st): View current filter configuration and stats. (In-game and Console)
 - pf.list (pf.l): List all words currently in the filter. (In-game and Console)
 - pf.addstrict (pf.as) <w1,w2>: Add heavy swear(s) (In-game and Console)
@@ -43,7 +46,7 @@ Commands can be used in the server console (e.g., `pf.aw word`) or in-game by ad
 
 ## 🛡️ Admin Setup
 To use in-game commands, you must first authorize yourself via the server console:
-1. Enter the "PF.MENU" - Enter Admin Menu - Add/Remove Admin - Enter the name (Case SeNSItive)
+1. Enter the "PF.MENU" - Enter Admin Menu - Add/Remove Admin - Enter the ID and Username of the player you want to authorize. (You can find player IDs using the new `pf.lookup <username>` command - Shows Id and profile link for online players, or just provides the profile link based on the username if they are offline.)
 2. You can now use `/pf.h` in the BeamMP chat To see the available commands and manage the Wordlist directly from the game.
 
 ## 📂 Data Management
@@ -54,3 +57,4 @@ To use in-game commands, you must first authorize yourself via the server consol
 - ProFilter is designed to catch common profanity and obfuscation techniques, but no filter can guarantee 100% effectiveness. Regularly review and update your wordlist as needed.
 - Always keep backups of your `data.txt` file, especially before making bulk changes or using the factory reset command.
 - If you encounter any issues or have suggestions for improvement, please reach out to my github or the BeamMP community forums.
+- If you dont specify a name when adding an admin, it will default to "Unknown". The system will automatically update the admin's name to match their current BeamMP username whenever they join the server, so you can add them with "Unknown" and it will correct itself next time they log in.

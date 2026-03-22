@@ -2,7 +2,8 @@
 --  ProFilter V1.1 - The Ultimate In-Game Profanity Filter for BeamMP Servers
 --  Features: Welcome Messages | Configurable Censor/Replace Modes | Advanced Leet-Speak Detection | Interactive Console Menu | Persistent Data Storage | Action Logging & More!
 --  Made by DeadEndReece (UkDrifter) | GitHub: https://github.com/DeadEndReece 
---  Updated to use BeamMP IDs for admin authentication.
+--  Updated to include /pf.lookup for live ID fetching and profile verification.
+--  Now uses BeamMP ID for admin authentication instead of username for improved security and reliability.
 -- ============================================================
 
 local baseDir = "Resources/Server/ProFilter/"
@@ -21,9 +22,9 @@ local CONFIG = {
 -- ============================================================
 
 local PF_DATA = {
-    words = {},         -- Matches only if standing alone (e.g. 'ass')
-    strictWords = {},   -- Matches ANYWHERE in the text (e.g. 'fuck' inside 'fuckyou')
-    admins = {},        -- Now stores [BeamMP_ID] = "Username"
+    words = {},         
+    strictWords = {},   
+    admins = {},        
     censorMode = false,
     replaceMode = false,
     logMode = false,
@@ -60,7 +61,6 @@ function LoadPFData()
                 end
             elseif line ~= "" then
                 if currentSection == "ADMINS" then 
-                    -- Support the new ID=Name format
                     if line:match("=") then
                         local id, name = line:match("([^=]+)=(.+)")
                         PF_DATA.admins[id] = name
@@ -90,7 +90,6 @@ function SavePFData()
     if file then
         file:write("[SETTINGS]\ncensor=" .. (PF_DATA.censorMode and "on" or "off") .. "\nreplace=" .. (PF_DATA.replaceMode and "on" or "off") .. "\nlog=" .. (PF_DATA.logMode and "on" or "off") .. "\nchar=" .. PF_DATA.censorChar .. "\nrword=" .. PF_DATA.replaceWord .. "\n\n")
         file:write("[ADMINS]\n")
-        -- Save as ID=Name
         for id, name in pairs(PF_DATA.admins) do 
             if type(name) == "boolean" then name = "Unknown" end
             file:write(id .. "=" .. name .. "\n") 
@@ -126,7 +125,8 @@ local function PrintAdminMenu()
     print("   --- Current Admins ---")
     local count = 0
     for k, v in pairs(PF_DATA.admins) do 
-        print("   - ID: " .. k .. " | Name: " .. tostring(v))
+        local safeName = tostring(v):gsub(" ", "_")
+        print("   - ID: " .. k .. " | Name: " .. tostring(v) .. " | URL: https://forum.beammp.com/u/" .. safeName)
         count = count + 1 
     end
     if count == 0 then print("   (None)") end
@@ -153,6 +153,7 @@ local function ProcessPFCommand(args, sender_id)
             MP.SendChatMessage(sender_id, "---------------- ^cProFilter^f Admin Menu ----------------")
             MP.SendChatMessage(sender_id, "^c /pf.status (pf.st)             ^f- View Config & Stats")
             MP.SendChatMessage(sender_id, "^c /pf.list (pf.l)                ^f- List all bad words")
+            MP.SendChatMessage(sender_id, "^c /pf.lookup (pf.lu) <name>      ^f- Get player ID & forum link")
             MP.SendChatMessage(sender_id, "--- ^bHEAVY SWEARS ^f(Blocks anywhere, e.g. fuckyou) ---")
             MP.SendChatMessage(sender_id, "^c /pf.addstrict (pf.as) ^f- Add Heavy Swear")
             MP.SendChatMessage(sender_id, "^c /pf.remstrict (pf.rs) ^f- Remove Heavy Swear")
@@ -165,6 +166,7 @@ local function ProcessPFCommand(args, sender_id)
             print("pf.menu                          - OPEN INTERACTIVE SETTINGS MENU (EASY!)")
             print("pf.status (pf.st)                - View Config & Stats") 
             print("pf.list (pf.l)                   - List all bad words") 
+            print("pf.lookup (pf.lu) <name>         - Get A players ID & forum link") 
             print("--- WORD MANAGEMENT (Batch edit using commas: pf.aw cat,dog) ---")
             print("pf.addstrict (pf.as) <w1,w2>     - Add HEAVY swear (blocks anywhere)") 
             print("pf.remstrict (pf.rs) <w1,w2>     - Rem HEAVY swear") 
@@ -175,6 +177,7 @@ local function ProcessPFCommand(args, sender_id)
         end
         return true
 
+    -- RE-ADDED THE MENU COMMAND HERE!
     elseif cmd == "pf.menu" and not sender_id then
         PrintMenu()
         return true
@@ -196,6 +199,40 @@ local function ProcessPFCommand(args, sender_id)
             print(" > Replace Mode : " .. (PF_DATA.replaceMode and "ON" or "OFF"))
             print(" > Logging Mode : " .. (PF_DATA.logMode and "ON" or "OFF"))
             print("----------------------")
+        end
+        return true
+
+    -- NEW COMMAND: User Lookup for ID and Profile Link
+    elseif cmd == "pf.lookup" or cmd == "pf.lu" then
+        if #args > 1 then
+            local targetName = table.concat(args, " ", 2)
+            local targetNameLower = targetName:lower()
+            local found = false
+            
+            -- MP.GetPlayers() returns a table where Key = Player ID, Value = Player Name
+            local players = MP.GetPlayers() 
+            
+            for pid, name in pairs(players) do
+                if name:lower() == targetNameLower then
+                    local identifiers = MP.GetPlayerIdentifiers(pid)
+                    local beammp_id = identifiers and tostring(identifiers.beammp) or "Unknown"
+                    local safeName = name:gsub(" ", "_")
+                    local url = "https://forum.beammp.com/u/" .. safeName
+                    
+                    Reply(sender_id, "Found User: " .. name .. " | ID: " .. beammp_id)
+                    Reply(sender_id, "Profile URL: " .. url)
+                    found = true
+                    break
+                end
+            end
+            
+            if not found then
+                local safeName = targetName:gsub(" ", "_")
+                Reply(sender_id, "Player '" .. targetName .. "' is not currently online to fetch their ID.")
+                Reply(sender_id, "However, their profile URL would be: https://forum.beammp.com/u/" .. safeName)
+            end
+        else
+            Reply(sender_id, "Usage: pf.lookup <username>")
         end
         return true
 
@@ -268,7 +305,7 @@ local function ProcessPFCommand(args, sender_id)
         return true
 
     elseif cmd == "pf.clearwords" or cmd == "pf.cw" then
-        if not sender_id then -- Ensure it's executed from the server console
+        if not sender_id then 
             if args[2] and args[2]:lower() == "confirm" then
                 PF_DATA.words = {}
                 PF_DATA.strictWords = {}
@@ -396,7 +433,7 @@ function OnPFConsoleInput(cmd)
             end
             print("---------------------------------------------------------")
             print(" > Step 7: Add an In-Game Admin?")
-            print(" > Type their BeamMP ID AND Username separated by a space (e.g. 1234567 UkDrifter)")
+            print(" > Type their BeamMP ID AND Username separated by a space (If not known skip and Use pf.lookup <username> to find IDs)")
             print(" > Or type 'n' to skip:")
             setupStep = 7
         elseif setupStep == 7 then
@@ -524,7 +561,7 @@ function OnPFChatMessage(sender_id, sender_name, message)
     local identifiers = MP.GetPlayerIdentifiers(sender_id)
     local beammp_id = identifiers and tostring(identifiers.beammp) or nil
 
-    -- NEW: Auto-Update Admin Usernames!
+    -- Auto-Update Admin Usernames!
     if beammp_id and PF_DATA.admins[beammp_id] then
         if PF_DATA.admins[beammp_id] ~= sender_name then
             PF_DATA.admins[beammp_id] = sender_name
